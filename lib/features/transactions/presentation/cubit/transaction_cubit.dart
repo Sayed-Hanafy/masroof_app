@@ -114,14 +114,15 @@ class TransactionCubit extends Cubit<TransactionState> {
   }
 
   double getTotalExpensesForSelectedMonth() {
-    final selectedMonth = state.selectedAnalysisMonth;
+    return getTotalExpensesForMonth(state.selectedAnalysisMonth);
+  }
+
+  double getTotalExpensesForMonth(DateTime month) {
     final expenses = state.transactions.where(
       (transaction) =>
           transaction.type == 'expense' &&
-          DateTime.parse(transaction.transactionDate).year ==
-              selectedMonth.year &&
-          DateTime.parse(transaction.transactionDate).month ==
-              selectedMonth.month,
+          DateTime.parse(transaction.transactionDate).year == month.year &&
+          DateTime.parse(transaction.transactionDate).month == month.month,
     );
 
     return expenses.fold<double>(
@@ -156,5 +157,33 @@ class TransactionCubit extends Cubit<TransactionState> {
     final currentMonth = state.selectedAnalysisMonth;
     final previousMonth = DateTime(currentMonth.year, currentMonth.month - 1);
     emit(state.copyWith(selectedAnalysisMonth: previousMonth));
+  }
+
+  void nextAnalysisMonth() {
+    final currentMonth = state.selectedAnalysisMonth;
+    final nextMonth = DateTime(currentMonth.year, currentMonth.month + 1);
+    emit(state.copyWith(selectedAnalysisMonth: nextMonth));
+  }
+
+  double getExpenseChangePercentage() {
+    final currentMonth = state.selectedAnalysisMonth;
+    final previousMonth = DateTime(currentMonth.year, currentMonth.month - 1);
+
+    final currentMonthExpenses = getTotalExpensesForMonth(currentMonth);
+    final previousMonthExpenses = getTotalExpensesForMonth(previousMonth);
+
+    if (previousMonthExpenses == 0) {
+      return 0;
+    }
+    final changePercentage =
+        ((currentMonthExpenses - previousMonthExpenses) /
+            previousMonthExpenses) *
+        100;
+
+    return changePercentage;
+  }
+
+  bool isIncrease() {
+    return getExpenseChangePercentage() > 0;
   }
 }
