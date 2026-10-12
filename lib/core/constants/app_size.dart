@@ -23,19 +23,27 @@ class AppSize {
   static final double h168 = 168.h;
 
   /// padding h
-  static double ph8 = 8.h;
-  static double ph16 = 16.h;
-  static double ph24 = 24.h;
-  static double ph32 = 32.h;
-  static double ph40 = 40.h;
+  static final double ph8 = 8.h;
+  static final double ph16 = 16.h;
+  static final double ph24 = 24.h;
+  static final double ph32 = 32.h;
+  static final double ph40 = 40.h;
+  static final double h20 = 20.h;
+  static final double h6 = 6.h;
+  static final double h42 = 42.h;
+  static final double h52 = 52.h;
 
   /// padding w
-  static double pw8 = 8.w;
-  static double pw16 = 16.w;
-  static double pw24 = 24.w;
-  static double pw20 = 20.w;
-  static double pw40 = 40.w;
+  static final double pw8 = 8.w;
+  static final double pw16 = 16.w;
+  static final double pw24 = 24.w;
+  static final double pw20 = 20.w;
+  static final double pw40 = 40.w;
+  static final double w20 = 20.w;
+  static final double w6 = 6.w;
+  static final double w52 = 52.w;
 
+  /// margin h
   /// icon size
   static final double iconSize = 12.dm;
   static final double iconSize2x = 16.dm;
@@ -52,4 +60,6 @@ class AppSize {
   static final double sp18 = 18.sp;
   static final double sp20 = 20.sp;
   static final double sp40 = 40.sp;
+  static final double sp24 = 24.sp;
+  static final double sp15 = 15.sp;
 }

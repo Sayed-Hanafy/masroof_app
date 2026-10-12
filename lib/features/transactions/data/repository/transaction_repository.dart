@@ -16,6 +16,18 @@ class TransactionRepository {
     return TransactionResponseModel.fromJson(response);
   }
 
+  Future<TransactionResponseModel> updateTransaction(
+    int transactionId,
+    TransactionModel transaction,
+  ) async {
+    final response = await transactionService.updateTransaction(
+      transactionId,
+      transaction,
+    );
+
+    return TransactionResponseModel.fromJson(response);
+  }
+
   Future<List<TransactionDataModel>> getTransactions(int userId) async {
     final response = await transactionService.getTransactions(userId: userId);
 
@@ -24,8 +36,10 @@ class TransactionRepository {
       return transactionsJson
           .map((json) => TransactionDataModel.fromJson(json))
           .toList();
-    } else {
-      throw Exception(response['message'] ?? 'حدث خطأ أثناء جلب العمليات');
+    } if(response['message'] == 'No transactions found') {
+      return [];
+      
     }
+    throw Exception(response['message'] ?? 'حدث خطأ أثناء جلب العمليات');
   }
 }

@@ -28,44 +28,31 @@ class _AddTransactionsScreenState extends State<AddTransactionsScreen> {
 
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'لم يتم العثور على بيانات المستخدم',
-          ),
-        ),
+        const SnackBar(content: Text('لم يتم العثور على بيانات المستخدم')),
       );
       return;
     }
     final userId = user.id;
-    final categoryId =
-        context.read<CategoryCubit>().state.selectedCategoryId;
-    final amount = double.tryParse(
-      amountController.text,
-    );
-    final type =
-        context.read<TransactionCubit>().state.selectedType;
+    final categoryId = context.read<CategoryCubit>().state.selectedCategoryId;
+    final amount = double.tryParse(amountController.text);
+    final type = context.read<TransactionCubit>().state.selectedType;
     final description = descriptionController.text.trim();
-    final selectedDate =
-        context.read<TransactionCubit>().state.selectedDate;
+    final selectedDate = context.read<TransactionCubit>().state.selectedDate;
 
     if (categoryId == null ||
         amount == null ||
         type == null ||
         description.isEmpty ||
         selectedDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('الرجاء ملء جميع الحقول'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('الرجاء ملء جميع الحقول')));
       return;
     }
     if (amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('الرجاء إدخال مبلغ صحيح'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('الرجاء إدخال مبلغ صحيح')));
       return;
     }
     final transaction = TransactionModel(
@@ -77,9 +64,7 @@ class _AddTransactionsScreenState extends State<AddTransactionsScreen> {
       transactionDate: selectedDate,
     );
 
-    context
-        .read<TransactionCubit>()
-        .createTransaction(transaction);
+    context.read<TransactionCubit>().createTransaction(transaction);
   }
 
   @override
@@ -118,42 +103,56 @@ class _AddTransactionsScreenState extends State<AddTransactionsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          context
-                              .read<TransactionCubit>()
-                              .selectTransactionType('income');
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              state.selectedType == 'income'
-                                  ? AppLightColors.primaryColor
-                                  : AppLightColors.wightColor,
-                          foregroundColor:
-                              state.selectedType == 'income'
-                                  ? AppLightColors.wightColor
-                                  : AppLightColors.mainTextColor,
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            context
+                                .read<TransactionCubit>()
+                                .selectTransactionType('income');
+                            // context.read<CategoryCubit>().clearSelectedCategory();
+                            context.read<CategoryCubit>().getCategories(
+                              'income',
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                state.selectedType == 'income'
+                                    ? AppLightColors.primaryColor
+                                    : AppLightColors.wightColor,
+                            foregroundColor:
+                                state.selectedType == 'income'
+                                    ? AppLightColors.wightColor
+                                    : AppLightColors.mainTextColor,
+                          ),
+                          child: Text("دخل"),
                         ),
-                        child: Text("دخل"),
                       ),
-                      ElevatedButton(
-                        onPressed: () {
-                          context
-                              .read<TransactionCubit>()
-                              .selectTransactionType('expense');
-                        },
+                      SizedBox(width: AppSize.w12),
 
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              state.selectedType == 'expense'
-                                  ? AppLightColors.primaryColor
-                                  : AppLightColors.wightColor,
-                          foregroundColor:
-                              state.selectedType == 'expense'
-                                  ? AppLightColors.wightColor
-                                  : AppLightColors.mainTextColor,
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            context
+                                .read<TransactionCubit>()
+                                .selectTransactionType('expense');
+                            // context.read<CategoryCubit>().clearSelectedCategory();
+                            context.read<CategoryCubit>().getCategories(
+                              'expense',
+                            );
+                          },
+
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                state.selectedType == 'expense'
+                                    ? AppLightColors.primaryColor
+                                    : AppLightColors.wightColor,
+                            foregroundColor:
+                                state.selectedType == 'expense'
+                                    ? AppLightColors.wightColor
+                                    : AppLightColors.mainTextColor,
+                          ),
+                          child: Text("مصروف"),
                         ),
-                        child: Text("مصروف"),
                       ),
                     ],
                   ),
@@ -175,6 +174,12 @@ class _AddTransactionsScreenState extends State<AddTransactionsScreen> {
                   BlocBuilder<CategoryCubit, CategoryState>(
                     builder: (context, state) {
                       return DropdownFlutter<String>(
+                        key: ValueKey(
+                          state.categories
+                              .map((category) => category.categoryId)
+                              .join('-'),
+                        ),
+
                         hintText: 'اختر الفئة',
 
                         items:
@@ -199,6 +204,7 @@ class _AddTransactionsScreenState extends State<AddTransactionsScreen> {
                           final selectedCategory = state.categories.firstWhere(
                             (category) => category.categoryName == value,
                           );
+
                           context.read<CategoryCubit>().selectedCategory(
                             selectedCategory.categoryId,
                           );
@@ -231,74 +237,9 @@ class _AddTransactionsScreenState extends State<AddTransactionsScreen> {
                   ElevatedButton(
                     onPressed:
                         state.status == EnTransactionStatus.loading
-                            ? null :_saveTransaction,
-                            // : () {
-                            //   final user = context.read<AuthCubit>().state.user;
+                            ? null
+                            : _saveTransaction,
 
-                            //   if (user == null) {
-                            //     ScaffoldMessenger.of(context).showSnackBar(
-                            //       const SnackBar(
-                            //         content: Text(
-                            //           'لم يتم العثور على بيانات المستخدم',
-                            //         ),
-                            //       ),
-                            //     );
-                            //     return;
-                            //   }
-                            //   final userId = user.id;
-                            //   final categoryId =
-                            //       context
-                            //           .read<CategoryCubit>()
-                            //           .state
-                            //           .selectedCategoryId;
-                            //   final amount = double.tryParse(
-                            //     amountController.text,
-                            //   );
-                            //   final type =
-                            //       context
-                            //           .read<TransactionCubit>()
-                            //           .state
-                            //           .selectedType;
-                            //   final description = descriptionController.text;
-                            //   final selectedDate =
-                            //       context
-                            //           .read<TransactionCubit>()
-                            //           .state
-                            //           .selectedDate;
-
-                            //   if (categoryId == null ||
-                            //       amount == null ||
-                            //       type == null ||
-                            //       description.isEmpty ||
-                            //       selectedDate == null) {
-                            //     ScaffoldMessenger.of(context).showSnackBar(
-                            //       SnackBar(
-                            //         content: Text('الرجاء ملء جميع الحقول'),
-                            //       ),
-                            //     );
-                            //     return;
-                            //   }
-                            //   if (amount <= 0) {
-                            //     ScaffoldMessenger.of(context).showSnackBar(
-                            //       SnackBar(
-                            //         content: Text('الرجاء إدخال مبلغ صحيح'),
-                            //       ),
-                            //     );
-                            //     return;
-                            //   }
-                            //   final transaction = TransactionModel(
-                            //     userId: userId,
-                            //     categoryId: categoryId,
-                            //     amount: amount,
-                            //     type: type,
-                            //     description: description,
-                            //     transactionDate: selectedDate,
-                            //   );
-
-                            //   context
-                            //       .read<TransactionCubit>()
-                            //       .createTransaction(transaction);
-                            // },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppLightColors.primaryColor,
                       minimumSize: Size(AppSize.w350, AppSize.h60),

@@ -11,6 +11,7 @@ import 'package:masroof_app/features/home/presentation/widgets/income_card.dart'
 import 'package:masroof_app/features/home/presentation/widgets/outcome_card%20.dart';
 import 'package:masroof_app/features/transactions/presentation/cubit/transaction_cubit.dart';
 import 'package:masroof_app/features/transactions/presentation/screens/transactions_add_screen.dart';
+import 'package:masroof_app/features/transactions/presentation/screens/transactions_details_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -35,7 +36,9 @@ class HomeScreen extends StatelessWidget {
 
           onPressed: () async {
             final userId = context.read<AuthCubit>().state.user!.id;
+
             final transactionCubit = context.read<TransactionCubit>();
+            transactionCubit.resetTransactionForm();
 
             final result = await Navigator.push(
               context,
@@ -48,7 +51,7 @@ class HomeScreen extends StatelessWidget {
                           create:
                               (_) => CategoryCubit(
                                 context.read<CategoryRepository>(),
-                              )..getCategories(userId),
+                              ),
                         ),
                       ],
                       child: AddTransactionsScreen(),
@@ -215,6 +218,23 @@ class HomeScreen extends StatelessWidget {
                         return Card(
                           color: AppLightColors.wightColor,
                           child: ListTile(
+                            onTap: () {
+                              final transactionCubit =
+                                  context.read<TransactionCubit>();
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => BlocProvider.value(
+                                        value: transactionCubit,
+                                        child: TransactionDetailsScreen(
+                                          transaction: transaction,
+                                        ),
+                                      ),
+                                ),
+                              );
+                            },
                             title: Text(transaction.description),
                             subtitle: Text(
                               ' ${transaction.categoryName} • ${transaction.transactionDate} ',

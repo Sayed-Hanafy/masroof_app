@@ -6,30 +6,61 @@ import 'package:masroof_app/features/categories/data/repository/category_reposit
 part 'category_state.dart';
 
 class CategoryCubit extends Cubit<CategoryState> {
-  CategoryRepository categoryRepository;
-  CategoryCubit(this.categoryRepository) : super(CategoryState());
+  final CategoryRepository categoryRepository;
 
-  Future<void> getCategories(int userId) async {
-    emit(state.copyWith(status: EnCategoryStatus.loading));
+  CategoryCubit(this.categoryRepository) : super(const CategoryState());
+
+  Future<void> getCategories(String type, {int? selectedCategoryId}) async {
+    if (isClosed) return;
+
+    emit(
+      state.copyWith(
+        status: EnCategoryStatus.loading,
+        categories: [],
+        clearSelectedCategory: true,
+      ),
+    );
+
     try {
-      final categoryResponse = await categoryRepository.getCategories(userId);
-      if (categoryResponse.status) {
-        emit(
-          state.copyWith(
-            status: EnCategoryStatus.success,
-            categories: categoryResponse.categories,
-            message: categoryResponse.message,
-          ),
-        );
-      } else {
+      final categoryResponse = await categoryRepository.getCategories(type);
+
+      if (isClosed) return;
+
+      if (!categoryResponse.status) {
         emit(
           state.copyWith(
             status: EnCategoryStatus.failure,
             message: categoryResponse.message,
           ),
         );
+        return;
       }
+
+      final categories = categoryResponse.categories;
+
+      int? categoryToSelect;
+
+      if (selectedCategoryId != null) {
+        final exists = categories.any(
+          (category) => category.categoryId == selectedCategoryId,
+        );
+
+        if (exists) {
+          categoryToSelect = selectedCategoryId;
+        }
+      }
+
+      emit(
+        state.copyWith(
+          status: EnCategoryStatus.success,
+          categories: categories,
+          selectedCategoryId: categoryToSelect,
+          message: categoryResponse.message,
+        ),
+      );
     } catch (e) {
+      if (isClosed) return;
+
       emit(
         state.copyWith(
           status: EnCategoryStatus.failure,
@@ -41,5 +72,9 @@ class CategoryCubit extends Cubit<CategoryState> {
 
   void selectedCategory(int categoryId) {
     emit(state.copyWith(selectedCategoryId: categoryId));
+  }
+
+  void clearSelectedCategory() {
+    emit(state.copyWith(clearSelectedCategory: true));
   }
 }

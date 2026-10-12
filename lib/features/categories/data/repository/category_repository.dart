@@ -6,8 +6,8 @@ class CategoryRepository {
 
   CategoryRepository({required this.categoryService});
 
-  Future<CategoryResponseModel> getCategories(int userId) async {
-    final response = await categoryService.getCategories(userId: userId);
+  Future<CategoryResponseModel> getCategories(String type) async {
+    final response = await categoryService.getCategories(type: type);
 
     return CategoryResponseModel.fromJson(response);
   }

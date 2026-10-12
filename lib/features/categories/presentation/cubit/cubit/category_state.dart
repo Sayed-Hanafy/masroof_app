@@ -20,11 +20,15 @@ class CategoryState extends Equatable {
     List<CategoryModel>? categories,
     int? selectedCategoryId,
     String? message,
+    bool clearSelectedCategory = false,
   }) {
     return CategoryState(
       status: status ?? this.status,
       categories: categories ?? this.categories,
-      selectedCategoryId: selectedCategoryId ?? this.selectedCategoryId,
+      selectedCategoryId:
+          clearSelectedCategory
+              ? null
+              : selectedCategoryId ?? this.selectedCategoryId,
       message: message ?? this.message,
     );
   }

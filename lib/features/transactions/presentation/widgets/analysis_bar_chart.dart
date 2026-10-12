@@ -1,6 +1,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:masroof_app/core/constants/app_colors.dart';
+import 'package:masroof_app/features/transactions/presentation/cubit/transaction_cubit.dart';
 
 class AnalysisBarChart extends StatelessWidget {
   final double income;
@@ -14,8 +16,11 @@ class AnalysisBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    //final maxValue = income > expense ? income : expense;
     final maxValue = income > expense ? income : expense;
-    final double maxY = maxValue == 0 ? 1000 : maxValue * 1.2;
+
+    final maxY =
+        maxValue == 0 ? 2000.0 : ((maxValue / 2000).ceil() * 2000).toDouble();
     return Container(
       height: 280,
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -31,83 +36,107 @@ class AnalysisBarChart extends StatelessWidget {
           ),
         ],
       ),
-      child: BarChart(
-        BarChartData(
+      child: Column(
+        children: [
+          const Text(
+            'الدخل VS المصروفات',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 20),
 
-          
-          maxY: maxY,
-          titlesData: FlTitlesData(
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (value, meta) {
-                  String title;
+          Expanded(
+            child: BarChart(
+              BarChartData(
+                maxY: maxY,
+                gridData: FlGridData(show: false),
+                  alignment: BarChartAlignment.spaceAround,
 
-                  switch (value.toInt()) {
-                    case 0:
-                      title = 'الدخل';
-                      break;
-                    case 1:
-                      title = 'المصروفات';
-                      break;
-                    default:
-                      title = '';
-                  }
+                titlesData: FlTitlesData(
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        String title;
 
-                  return Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
+                        switch (value.toInt()) {
+                          case 0:
+                            title = 'الدخل';
+                            break;
+                          case 1:
+                            title = 'المصروفات';
+                            break;
+                          default:
+                            title = '';
+                        }
+
+                        return Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      interval: 2000,
+                      getTitlesWidget: (value, meta) {
+                        final number = value.toInt();
+                        String title;
+                        if (number >= 1000) {
+                          title = '${(number / 1000).toStringAsFixed(0)}K';
+                        } else {
+                          title = number.toString();
+                        }
+                        return Text(
+                          title,
+                          style: const TextStyle(fontSize: 14),
+                        );
+                      },
+                    ),
+                  ),
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                ),
+                barGroups: [
+                  BarChartGroupData(
+                    x: 0,
+                    barRods: [
+                      BarChartRodData(
+                        color: Colors.green,
+                        toY: income,
+                        width: 35,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ],
+                  ),
+                  BarChartGroupData(
+                    x: 1,
+                    barRods: [
+                      BarChartRodData(
+                        color: Colors.red,
+                        toY: expense,
+                        width: 35,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ),
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 45,
-                getTitlesWidget: (value, meta) {
-                  return Text(
-                    value.toInt().toString(),
-                    style: const TextStyle(fontSize: 11),
-                  );
-                },
-              ),
-            ),
-            topTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-            rightTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
             ),
           ),
-          barGroups: [
-            BarChartGroupData(
-              x: 0,
-              barRods: [
-                BarChartRodData(
-                  color: Colors.green,
-                  toY: income,
-                  width: 35,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ],
-            ),
-            BarChartGroupData(
-              x: 1,
-              barRods: [
-                BarChartRodData(
-                  color: Colors.red,
-                  toY: expense,
-                  width: 35,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ],
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }

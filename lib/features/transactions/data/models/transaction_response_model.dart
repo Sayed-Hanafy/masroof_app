@@ -1,19 +1,24 @@
+
 class TransactionResponseModel {
   final bool status;
   final String message;
-  final int transactionId;
+  final int? transactionId;
 
   TransactionResponseModel({
     required this.status,
     required this.message,
-    required this.transactionId,
+    this.transactionId,
   });
 
-  factory TransactionResponseModel.fromJson(Map<String, dynamic> json) {
+  factory TransactionResponseModel.fromJson(
+    Map<String, dynamic> json,
+  ) {
     return TransactionResponseModel(
-      status: json['status'],
-      message: json['message'],
-      transactionId: json['transaction_id'],
+      status: json['status'] == true,
+      message: json['message']?.toString() ?? '',
+      transactionId: json['transaction_id'] == null
+          ? null
+          : int.parse(json['transaction_id'].toString()),
     );
   }
 }

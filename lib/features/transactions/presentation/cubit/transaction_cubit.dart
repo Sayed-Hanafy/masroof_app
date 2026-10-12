@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:masroof_app/features/transactions/data/models/transaction_data_model.dart';
@@ -29,6 +30,7 @@ class TransactionCubit extends Cubit<TransactionState> {
       final response = await transactionRepository.createTransaction(
         transaction,
       );
+      if (isClosed) return;
 
       if (response.status) {
         emit(
@@ -47,6 +49,7 @@ class TransactionCubit extends Cubit<TransactionState> {
         );
       }
     } catch (e) {
+      if (isClosed) return;
       emit(
         state.copyWith(
           status: EnTransactionStatus.failure,
@@ -56,7 +59,54 @@ class TransactionCubit extends Cubit<TransactionState> {
     }
   }
 
+  Future<void> updateTransaction(
+    int transactionId,
+    TransactionModel transaction,
+  ) async {
+    emit(
+      state.copyWith(
+        status: EnTransactionStatus.loading,
+        clearMessage: true,
+        clearTransactionId: true,
+      ),
+    );
+
+    try {
+      final response = await transactionRepository.updateTransaction(
+        transactionId,
+        transaction,
+      );
+      if (isClosed) return;
+
+      if (response.status) {
+        emit(
+          state.copyWith(
+            status: EnTransactionStatus.success,
+            message: response.message,
+            transactionId: response.transactionId,
+          ),
+        );
+      } else {
+        emit(
+          state.copyWith(
+            status: EnTransactionStatus.failure,
+            message: response.message,
+          ),
+        );
+      }
+    } catch (e) {
+      if (isClosed) return;
+      emit(
+        state.copyWith(
+          status: EnTransactionStatus.failure,
+          message: 'حدث خطأ أثناء تعديل العملية',
+        ),
+      );
+    }
+  }
+
   Future<void> getTransaction(int userId) async {
+    if (isClosed) return;
     emit(
       state.copyWith(
         getTransactionStatus: EnGetTransactionStatus.loading,
@@ -65,6 +115,7 @@ class TransactionCubit extends Cubit<TransactionState> {
     );
     try {
       final response = await transactionRepository.getTransactions(userId);
+      if (isClosed) return;
       final totalIncome = response
           .where((transaction) => transaction.type == 'income')
           .fold<double>(0, (sum, transaction) => sum + transaction.amount);
@@ -82,7 +133,11 @@ class TransactionCubit extends Cubit<TransactionState> {
           balance: balance,
         ),
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      if (isClosed) return;
+
+      debugPrint('GET TRANSACTIONS ERROR: $e');
+      debugPrintStack(stackTrace: stackTrace);
       emit(
         state.copyWith(
           getTransactionStatus: EnGetTransactionStatus.failure,
@@ -185,5 +240,59 @@ class TransactionCubit extends Cubit<TransactionState> {
 
   bool isIncrease() {
     return getExpenseChangePercentage() > 0;
+  }
+
+  Map<DateTime, double> getMonthlyExpenses() {
+    final monthlyExpenses = <DateTime, double>{};
+    for (final transaction in state.transactions) {
+      if (transaction.type != 'expense') {
+        continue;
+      }
+      final month = DateTime(
+        DateTime.parse(transaction.transactionDate).year,
+        DateTime.parse(transaction.transactionDate).month,
+      );
+      monthlyExpenses[month] =
+          (monthlyExpenses[month] ?? 0) + transaction.amount;
+    }
+    return monthlyExpenses;
+  }
+
+  Map<DateTime, double> getLastSixMonthsExpenses() {
+    final monthlyExpenses = getMonthlyExpenses();
+
+    final selectedMonth = state.selectedAnalysisMonth;
+
+    final result = <DateTime, double>{};
+
+    for (int i = 5; i >= 0; i--) {
+      final month = DateTime(selectedMonth.year, selectedMonth.month - i);
+
+      result[month] = monthlyExpenses[month] ?? 0;
+    }
+
+    return result;
+  }
+
+  void resetTransactionStatus() {
+    emit(
+      state.copyWith(
+        status: EnTransactionStatus.initial,
+        clearMessage: true,
+        clearTransactionId: true,
+      ),
+    );
+  }
+
+  void resetTransactionForm() {
+    emit(
+      state.copyWith(
+        status: EnTransactionStatus.initial,
+        clearMessage: true,
+        clearTransactionId: true,
+        clearSelectedType: true,
+        clearSelectedDate: true,
+      ),
+    );
   }
 }
