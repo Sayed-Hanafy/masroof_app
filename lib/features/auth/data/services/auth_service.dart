@@ -15,7 +15,7 @@ class AuthService {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
-      );
+      ).timeout(const Duration(seconds: 10));
 
       final decodedResponse = jsonDecode(response.body);
 
@@ -48,7 +48,7 @@ class AuthService {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({"name": name, 'email': email, 'password': password}),
-      );
+      ).timeout(const Duration(seconds: 10));
 
       final decodedResponse = jsonDecode(response.body);
 

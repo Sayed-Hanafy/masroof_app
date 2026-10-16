@@ -16,7 +16,7 @@ class TransactionService {
         headers: {'Content-Type': 'application/json'},
 
         body: jsonEncode(transaction.toJson()),
-      );
+      ).timeout(const Duration(seconds: 15));
       final decodedResponse = jsonDecode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -38,7 +38,7 @@ class TransactionService {
     final url = Uri.parse('${ApiConstants.getTransactions}?userId=$userId');
 
     try {
-      final response = await http.get(url).timeout(const Duration(seconds: 15));
+      final response = await http.get(url).timeout(const Duration(seconds: 10));
 
       final decodedResponse = jsonDecode(response.body);
 
@@ -71,7 +71,7 @@ class TransactionService {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(data),
-      );
+      ).timeout(const Duration(seconds: 10));
       Map<String, dynamic>? decodedResponse;
       try {
         decodedResponse = jsonDecode(response.body) as Map<String, dynamic>;
@@ -106,7 +106,7 @@ class TransactionService {
           'transaction_id': transactionId,
           'user_id': userId,
         }),
-      );
+      ).timeout(const Duration(seconds: 10));
 
       Map<String, dynamic>? decodedResponse;
       try {

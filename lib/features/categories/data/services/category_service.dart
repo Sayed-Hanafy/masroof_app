@@ -14,7 +14,7 @@ class CategoryService {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'type': type}),
-      );
+      ).timeout(const Duration(seconds: 10));
 
       final decodedResponse = jsonDecode(response.body);
 
