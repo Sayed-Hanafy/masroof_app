@@ -195,6 +195,9 @@ class HomeScreen extends StatelessWidget {
               Expanded(
                 child: BlocBuilder<TransactionCubit, TransactionState>(
                   builder: (context, state) {
+                    debugPrint(
+                      'HomeScreen status: ${state.getTransactionStatus}',
+                    );
                     if (state.getTransactionStatus ==
                         EnGetTransactionStatus.loading) {
                       return Center(child: CircularProgressIndicator());
@@ -218,11 +221,11 @@ class HomeScreen extends StatelessWidget {
                         return Card(
                           color: AppLightColors.wightColor,
                           child: ListTile(
-                            onTap: () {
+                            onTap: () async {
                               final transactionCubit =
                                   context.read<TransactionCubit>();
 
-                              Navigator.push(
+                              final deleted = await Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder:
@@ -234,6 +237,12 @@ class HomeScreen extends StatelessWidget {
                                       ),
                                 ),
                               );
+
+                              if (deleted == true && context.mounted) {
+                                await transactionCubit.getTransaction(
+                                  transaction.userId,
+                                );
+                              }
                             },
                             title: Text(transaction.description),
                             subtitle: Text(

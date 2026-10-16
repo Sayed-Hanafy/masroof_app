@@ -28,6 +28,19 @@ class TransactionRepository {
     return TransactionResponseModel.fromJson(response);
   }
 
+
+    Future<TransactionResponseModel> deleteTransaction(
+    int transactionId,
+    int userId,
+  ) async {
+    final response = await transactionService.deleteTransaction(
+      transactionId,
+      userId,
+    );
+
+    return TransactionResponseModel.fromJson(response);
+  }
+
   Future<List<TransactionDataModel>> getTransactions(int userId) async {
     final response = await transactionService.getTransactions(userId: userId);
 

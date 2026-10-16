@@ -38,12 +38,12 @@ class TransactionService {
     final url = Uri.parse('${ApiConstants.getTransactions}?userId=$userId');
 
     try {
-      final response = await http.get(url);
+      final response = await http.get(url).timeout(const Duration(seconds: 15));
 
       final decodedResponse = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        return decodedResponse;
+        return Map<String, dynamic>.from(decodedResponse);
       } else {
         final message =
             decodedResponse['message'] ??
@@ -54,6 +54,7 @@ class TransactionService {
       }
     } catch (e) {
       print('TransactionService ERROR: $e');
+      debugPrint('وصل التنفيذ إلى catch في TransactionService');
       rethrow;
     }
   }
@@ -71,8 +72,42 @@ class TransactionService {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(data),
       );
-      debugPrint('UPDATE STATUS CODE: ${response.statusCode}');
-      debugPrint('UPDATE RESPONSE BODY: ${response.body}');
+      Map<String, dynamic>? decodedResponse;
+      try {
+        decodedResponse = jsonDecode(response.body) as Map<String, dynamic>;
+      } catch (_) {
+        decodedResponse = null;
+      }
+      if (response.statusCode == 200 && decodedResponse != null) {
+        return decodedResponse;
+      } else {
+        final message =
+            decodedResponse?['message'] ??
+            decodedResponse?['error'] ??
+            'حدث خطأ أثناء تحديث العملية';
+        throw Exception(message);
+      }
+    } catch (e) {
+      print('TransactionService ERROR: $e');
+      rethrow;
+    }
+  }
+
+    Future<Map<String, dynamic>> deleteTransaction(
+    int transactionId,
+    int userId,
+  ) async {
+    final url = Uri.parse(ApiConstants.deleteTransaction);
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'transaction_id': transactionId,
+          'user_id': userId,
+        }),
+      );
+
       Map<String, dynamic>? decodedResponse;
       try {
         decodedResponse = jsonDecode(response.body) as Map<String, dynamic>;
@@ -87,7 +122,7 @@ class TransactionService {
         final message =
             decodedResponse?['message'] ??
             decodedResponse?['error'] ??
-            'حدث خطأ أثناء تحديث العملية';
+            'حدث خطأ أثناء حذف العملية';
         throw Exception(message);
       }
     } catch (e) {

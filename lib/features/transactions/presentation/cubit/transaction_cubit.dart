@@ -105,6 +105,49 @@ class TransactionCubit extends Cubit<TransactionState> {
     }
   }
 
+  Future<void> deleteTransaction(int transactionId, int userId) async {
+    emit(
+      state.copyWith(
+        status: EnTransactionStatus.loading,
+        clearMessage: true,
+        clearTransactionId: true,
+      ),
+    );
+
+    try {
+      final response = await transactionRepository.deleteTransaction(
+        transactionId,
+        userId,
+      );
+      if (isClosed) return;
+
+      if (response.status) {
+        emit(
+          state.copyWith(
+            status: EnTransactionStatus.success,
+            message: response.message,
+            transactionId: response.transactionId,
+          ),
+        );
+      } else {
+        emit(
+          state.copyWith(
+            status: EnTransactionStatus.failure,
+            message: response.message,
+          ),
+        );
+      }
+    } catch (e) {
+      if (isClosed) return;
+      emit(
+        state.copyWith(
+          status: EnTransactionStatus.failure,
+          message: 'حدث خطأ أثناء حذف العملية',
+        ),
+      );
+    }
+  }
+
   Future<void> getTransaction(int userId) async {
     if (isClosed) return;
     emit(
@@ -113,6 +156,7 @@ class TransactionCubit extends Cubit<TransactionState> {
         clearMessage: true,
       ),
     );
+    debugPrint('بدأ جلب العمليات - بعد loading');
     try {
       final response = await transactionRepository.getTransactions(userId);
       if (isClosed) return;
@@ -134,16 +178,20 @@ class TransactionCubit extends Cubit<TransactionState> {
         ),
       );
     } catch (e, stackTrace) {
+      debugPrint('وصل التنفيذ إلى catch في TransactionCubit');
       if (isClosed) return;
 
       debugPrint('GET TRANSACTIONS ERROR: $e');
       debugPrintStack(stackTrace: stackTrace);
+      debugPrint('قبل إصدار حالة failure: ${state.getTransactionStatus}');
       emit(
         state.copyWith(
           getTransactionStatus: EnGetTransactionStatus.failure,
           message: 'حدث خطأ أثناء جلب العمليات',
         ),
+        
       );
+      debugPrint('تم إصدار حالة failure');
     }
   }
 

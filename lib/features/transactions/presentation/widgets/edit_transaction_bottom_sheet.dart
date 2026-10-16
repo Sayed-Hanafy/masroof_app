@@ -54,21 +54,7 @@ class _EditTransactionBottomSheetState
 
   Future<void> _saveChanges() async {
     if (_isSaving) return;
-
-    final description = descriptionController.text.trim();
-    final amount = double.tryParse(amountController.text.trim());
-    final categoryId = context.read<CategoryCubit>().state.selectedCategoryId;
-
-    if (description.isEmpty ||
-        amount == null ||
-        amount <= 0 ||
-        categoryId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى ملء جميع الحقول بشكل صحيح')),
-      );
-      return;
-    }
-
+    if (!_validateInputs()) return;
     setState(() {
       _isSaving = true;
     });
@@ -78,14 +64,7 @@ class _EditTransactionBottomSheetState
 
       await cubit.updateTransaction(
         widget.transaction.transactionId,
-        TransactionModel(
-          userId: widget.transaction.userId,
-          categoryId: categoryId,
-          amount: amount,
-          type: selectedType,
-          description: description,
-          transactionDate: selectedDate,
-        ),
+        _buildTransactionModel(),
       );
 
       if (!mounted) return;
@@ -96,47 +75,14 @@ class _EditTransactionBottomSheetState
         final message = cubit.state.message ?? '';
 
         if (message == 'No changes were made') {
-          final shouldReturnHome = await showDialog<bool>(
-            context: context,
-            builder: (dialogContext) {
-              return AlertDialog(
-                title: const Text('تنبيه'),
-                content: const Text(
-                  'لم يتم إجراء أي تعديل على العملية. '
-                  'هل تريد العودة إلى الشاشة الرئيسية؟',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(dialogContext).pop(true);
-                    },
-                    child: const Text('موافق'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(dialogContext).pop(false);
-                    },
-                    child: const Text('إلغاء'),
-                  ),
-                ],
-              );
-            },
-          );
-
+          final shouldReturnHome = await _showNoChangesDialog();
           if (!mounted) return;
-
           if (shouldReturnHome == true) {
             Navigator.of(context).pop(true);
             return;
           }
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                message.isEmpty ? 'حدث خطأ أثناء تعديل العملية' : message,
-              ),
-            ),
-          );
+         _showErrorMessage( message);
         }
 
         if (!mounted) return;
@@ -156,6 +102,77 @@ class _EditTransactionBottomSheetState
         const SnackBar(content: Text('حدث خطأ أثناء تعديل العملية')),
       );
     }
+  }
+
+
+void _showErrorMessage(String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        message.isEmpty
+            ? 'حدث خطأ أثناء تعديل العملية'
+            : message,
+      ),
+    ),
+  );
+}
+
+
+  TransactionModel _buildTransactionModel() {
+    return TransactionModel(
+      userId: widget.transaction.userId,
+      categoryId: context.read<CategoryCubit>().state.selectedCategoryId!,
+      amount: double.parse(amountController.text.trim()),
+      type: selectedType,
+      description: descriptionController.text.trim(),
+      transactionDate: selectedDate,
+    );
+  }
+
+  bool _validateInputs() {
+    final description = descriptionController.text.trim();
+    final amount = double.tryParse(amountController.text.trim());
+    final categoryId = context.read<CategoryCubit>().state.selectedCategoryId;
+
+    if (description.isEmpty ||
+        amount == null ||
+        amount <= 0 ||
+        categoryId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يرجى ملء جميع الحقول بشكل صحيح')),
+      );
+      return false;
+    }
+    return true;
+  }
+
+  Future<bool?> _showNoChangesDialog() {
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('تنبيه'),
+          content: const Text(
+            'لم يتم إجراء أي تعديل على العملية. '
+            'هل تريد العودة إلى الشاشة الرئيسية؟',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(true);
+              },
+              child: const Text('موافق'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(false);
+              },
+              child: const Text('إلغاء'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override

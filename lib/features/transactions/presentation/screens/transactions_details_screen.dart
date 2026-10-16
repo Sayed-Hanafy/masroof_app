@@ -221,7 +221,7 @@ class TransactionDetailsScreen extends StatelessWidget {
 
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: () => _confirmDeleteTransaction(context),
                       icon: const Icon(Icons.delete_outline),
                       label: const Text('حذف'),
                       style: ElevatedButton.styleFrom(
@@ -242,5 +242,62 @@ class TransactionDetailsScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDeleteTransaction(BuildContext context) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('تأكيد الحذف'),
+          content: const Text(
+            'هل أنت متأكد من حذف هذه العملية؟ '
+            'لا يمكن التراجع عن هذا الإجراء.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(false);
+              },
+              child: const Text('إلغاء'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(true);
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('حذف'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (!context.mounted) return;
+
+    if (shouldDelete != true) return;
+    final transactionCubit = context.read<TransactionCubit>();
+    await transactionCubit.deleteTransaction(
+      transaction.transactionId,
+      transaction.userId,
+    );
+
+    if (!context.mounted) return;
+
+    if (transactionCubit.state.status == EnTransactionStatus.success) {
+      Navigator.of(context).pop(true);
+    } else {
+      final message = transactionCubit.state.message;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            message?.isNotEmpty == true
+                ? message!
+                : 'حدث خطأ أثناء حذف العملية',
+          ),
+        ),
+      );
+    }
   }
 }
