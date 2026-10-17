@@ -195,9 +195,7 @@ class HomeScreen extends StatelessWidget {
               Expanded(
                 child: BlocBuilder<TransactionCubit, TransactionState>(
                   builder: (context, state) {
-                    debugPrint(
-                      'HomeScreen status: ${state.getTransactionStatus}',
-                    );
+
                     if (state.getTransactionStatus ==
                         EnGetTransactionStatus.loading) {
                       return Center(child: CircularProgressIndicator());

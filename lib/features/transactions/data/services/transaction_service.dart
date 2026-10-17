@@ -54,7 +54,6 @@ class TransactionService {
       }
     } catch (e) {
       print('TransactionService ERROR: $e');
-      debugPrint('وصل التنفيذ إلى catch في TransactionService');
       rethrow;
     }
   }

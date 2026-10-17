@@ -7,6 +7,7 @@ import 'package:masroof_app/features/categories/presentation/cubit/cubit/categor
 import 'package:masroof_app/features/transactions/data/models/transaction_data_model.dart';
 import 'package:masroof_app/features/transactions/data/models/transaction_model.dart';
 import 'package:masroof_app/features/transactions/presentation/cubit/transaction_cubit.dart';
+import 'package:dropdown_flutter/custom_dropdown.dart';
 
 class EditTransactionBottomSheet extends StatefulWidget {
   final TransactionDataModel transaction;
@@ -82,7 +83,7 @@ class _EditTransactionBottomSheetState
             return;
           }
         } else {
-         _showErrorMessage( message);
+          _showErrorMessage(message);
         }
 
         if (!mounted) return;
@@ -104,19 +105,15 @@ class _EditTransactionBottomSheetState
     }
   }
 
-
-void _showErrorMessage(String message) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(
-        message.isEmpty
-            ? 'حدث خطأ أثناء تعديل العملية'
-            : message,
+  void _showErrorMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message.isEmpty ? 'حدث خطأ أثناء تعديل العملية' : message,
+        ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   TransactionModel _buildTransactionModel() {
     return TransactionModel(
@@ -338,30 +335,35 @@ void _showErrorMessage(String message) {
                           ? state.selectedCategoryId
                           : null;
 
-                  return DropdownButtonFormField<int>(
-                    value: selectedCategoryValue,
-
-                    decoration: InputDecoration(
-                      hintText: 'اختر الفئة',
-                      filled: true,
-                      fillColor: AppLightColors.wightColor,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppSize.w10),
+                  return DropdownFlutter<String>(
+                    key: ValueKey(
+                      state.categories
+                          .map((category) => category.categoryId)
+                          .join('-'),
+                    ),
+                    hintText: 'اختر الفئة',
+                    items:
+                        state.categories
+                            .map((category) => category.categoryName)
+                            .toList(),
+                    decoration: CustomDropdownDecoration(
+                      closedFillColor: AppLightColors.wightColor,
+                      closedBorderRadius: BorderRadius.circular(AppSize.w10),
+                      closedBorder: Border.all(
+                        color: AppLightColors.strokeColor,
+                        width: 1,
                       ),
                     ),
-
-                    items:
-                        state.categories.map((category) {
-                          return DropdownMenuItem<int>(
-                            value: category.categoryId,
-                            child: Text(category.categoryName),
-                          );
-                        }).toList(),
-
                     onChanged: (value) {
                       if (value == null) return;
 
-                      context.read<CategoryCubit>().selectedCategory(value);
+                      final selectedCategory = state.categories.firstWhere(
+                        (category) => category.categoryName == value,
+                      );
+
+                      context.read<CategoryCubit>().selectedCategory(
+                        selectedCategory.categoryId,
+                      );
                     },
                   );
                 },

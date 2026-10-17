@@ -156,7 +156,6 @@ class TransactionCubit extends Cubit<TransactionState> {
         clearMessage: true,
       ),
     );
-    debugPrint('بدأ جلب العمليات - بعد loading');
     try {
       final response = await transactionRepository.getTransactions(userId);
       if (isClosed) return;
@@ -178,20 +177,13 @@ class TransactionCubit extends Cubit<TransactionState> {
         ),
       );
     } catch (e, stackTrace) {
-      debugPrint('وصل التنفيذ إلى catch في TransactionCubit');
       if (isClosed) return;
-
-      debugPrint('GET TRANSACTIONS ERROR: $e');
-      debugPrintStack(stackTrace: stackTrace);
-      debugPrint('قبل إصدار حالة failure: ${state.getTransactionStatus}');
       emit(
         state.copyWith(
           getTransactionStatus: EnGetTransactionStatus.failure,
           message: 'حدث خطأ أثناء جلب العمليات',
         ),
-        
       );
-      debugPrint('تم إصدار حالة failure');
     }
   }
 
@@ -264,7 +256,21 @@ class TransactionCubit extends Cubit<TransactionState> {
 
   void nextAnalysisMonth() {
     final currentMonth = state.selectedAnalysisMonth;
+    final now = DateTime.now();
+
+    // منع الانتقال إلى شهر مستقبلي
+    if (currentMonth.year == now.year && currentMonth.month == now.month) {
+      return;
+    }
+
     final nextMonth = DateTime(currentMonth.year, currentMonth.month + 1);
+
+    // التأكد من عدم تجاوز الشهر الحالي
+    if (nextMonth.year > now.year ||
+        (nextMonth.year == now.year && nextMonth.month > now.month)) {
+      return;
+    }
+
     emit(state.copyWith(selectedAnalysisMonth: nextMonth));
   }
 
@@ -342,5 +348,34 @@ class TransactionCubit extends Cubit<TransactionState> {
         clearSelectedDate: true,
       ),
     );
+  }
+
+  String getExpenseComparisonMessage() {
+    final currentMonth = state.selectedAnalysisMonth;
+    final previousMonth = DateTime(currentMonth.year, currentMonth.month - 1);
+
+    final currentExpenses = getTotalExpensesForMonth(currentMonth);
+    final previousExpenses = getTotalExpensesForMonth(previousMonth);
+
+    if (previousExpenses == 0 && currentExpenses == 0) {
+      return 'لا توجد مصروفات في الشهرين للمقارنة';
+    }
+
+    if (previousExpenses == 0) {
+      return 'لا توجد مصروفات في الشهر السابق للمقارنة';
+    }
+
+    final changePercentage =
+        ((currentExpenses - previousExpenses) / previousExpenses) * 100;
+
+    if (changePercentage > 0) {
+      return 'زيادة عن الشهر السابق';
+    }
+
+    if (changePercentage < 0) {
+      return 'انخفاض عن الشهر السابق';
+    }
+
+    return 'لا يوجد تغيير عن الشهر السابق';
   }
 }

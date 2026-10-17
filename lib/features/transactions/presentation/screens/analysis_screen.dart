@@ -88,9 +88,25 @@ class AnalysisScreen extends StatelessWidget {
           final balance = cubit.getBalanceForSelectedMonth();
 
           /// calculate percentage change from previous month
+
           final changePercentage = cubit.getExpenseChangePercentage();
-          final increase = changePercentage > 0;
-          final noChange = changePercentage == 0;
+          final comparisonMessage = cubit.getExpenseComparisonMessage();
+
+          // final currentExpenses = cubit.getTotalExpensesForSelectedMonth();
+
+          final previousMonth = DateTime(
+            selectedMonth.year,
+            selectedMonth.month - 1,
+          );
+
+          final previousExpenses = cubit.getTotalExpensesForMonth(
+            previousMonth,
+          );
+
+          final noPreviousExpenses = previousExpenses == 0;
+          final increase = !noPreviousExpenses && changePercentage > 0;
+          final decrease = !noPreviousExpenses && changePercentage < 0;
+          final noChange = !noPreviousExpenses && changePercentage == 0;
           final expensesByCategory = cubit.getExpensesByCategory();
 
           /// test monthly expense method
@@ -211,53 +227,58 @@ class AnalysisScreen extends StatelessWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(
-                                  '${changePercentage.abs().toStringAsFixed(1)}%',
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color:
-                                        noChange
-                                            ? Colors.grey
-                                            : increase
-                                            ? Colors.red
-                                            : Colors.green,
+                                if (!noPreviousExpenses) ...[
+                                  Text(
+                                    '${changePercentage.abs().toStringAsFixed(1)}%',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color:
+                                          increase
+                                              ? Colors.red
+                                              : decrease
+                                              ? Colors.green
+                                              : Colors.grey,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  noChange
-                                      ? 'لا يوجد تغيير عن الشهر السابق'
-                                      : increase
-                                      ? 'زيادة عن الشهر السابق'
-                                      : 'انخفاض عن الشهر السابق',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color:
-                                        noChange
-                                            ? Colors.grey
-                                            : increase
-                                            ? Colors.red
-                                            : Colors.green,
+                                  const SizedBox(width: 6),
+                                ],
+
+                                Flexible(
+                                  child: Text(
+                                    comparisonMessage,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color:
+                                          noPreviousExpenses
+                                              ? Colors.grey
+                                              : increase
+                                              ? Colors.red
+                                              : decrease
+                                              ? Colors.green
+                                              : Colors.grey,
+                                    ),
                                   ),
                                 ),
 
-                                const SizedBox(width: 4),
-
-                                Icon(
-                                  noChange
-                                      ? Icons.remove
-                                      : increase
-                                      ? Icons.arrow_upward
-                                      : Icons.arrow_downward,
-                                  size: 18,
-                                  color:
-                                      noChange
-                                          ? Colors.grey
-                                          : increase
-                                          ? Colors.red
-                                          : Colors.green,
-                                ),
+                                if (!noPreviousExpenses) ...[
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    increase
+                                        ? Icons.arrow_upward
+                                        : decrease
+                                        ? Icons.arrow_downward
+                                        : Icons.remove,
+                                    size: 18,
+                                    color:
+                                        increase
+                                            ? Colors.red
+                                            : decrease
+                                            ? Colors.green
+                                            : Colors.grey,
+                                  ),
+                                ],
                               ],
                             ),
                           ],
